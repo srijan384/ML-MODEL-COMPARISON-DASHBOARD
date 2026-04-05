@@ -8,6 +8,10 @@ The main goal of this project is to allow users to **train and compare multiple 
 The dashboard enables users to upload datasets, select features and target variables, and visualize model performance using different evaluation metrics.
 
 ---
+# ML Model Comparison Dashboard
+
+## 🌐 Live Demo
+👉 https://mldashboardproject.streamlit.app/
 
 ## 🎯 Objectives
 
