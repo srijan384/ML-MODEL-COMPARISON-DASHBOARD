@@ -178,27 +178,65 @@ if st.button("🚀 Train Models"):
         # -----------------------------
         # ROC Curve (Binary only)
         # -----------------------------
-        if len(y.unique()) == 2:
-            st.subheader("📈 ROC Curve")
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
 
-            fig, ax = plt.subplots()
+# ROC Curve (only for binary classification)
+if len(y.unique()) == 2:
 
-            for model_name, y_pred in predictions.items():
-                try:
-                    model = None
-                    # re-train quickly for probability
-                    from sklearn.linear_model import LogisticRegression
-                    model = LogisticRegression().fit(X_train, y_train)
+    st.subheader("📈 ROC Curve")
 
-                    y_prob = model.predict_proba(X_test)[:, 1]
+    fig, ax = plt.subplots()
 
-                    fpr, tpr, _ = roc_curve(y_test, y_prob)
-                    ax.plot(fpr, tpr, label=model_name)
-                except:
-                    pass
+    for model_name in selected_models:
+        model = None
 
-            ax.plot([0, 1], [0, 1], linestyle='--')
-            ax.legend()
-            ax.set_title("ROC Curve")
+        # Recreate the same model
+        if model_name == "Logistic Regression":
+            from sklearn.linear_model import LogisticRegression
+            model = LogisticRegression(max_iter=200)
 
-            st.pyplot(fig)
+        elif model_name == "Decision Tree":
+            from sklearn.tree import DecisionTreeClassifier
+            model = DecisionTreeClassifier()
+
+        elif model_name == "Random Forest":
+            from sklearn.ensemble import RandomForestClassifier
+            model = RandomForestClassifier()
+
+        elif model_name == "KNN":
+            from sklearn.neighbors import KNeighborsClassifier
+            model = KNeighborsClassifier()
+
+        elif model_name == "SVM":
+            from sklearn.svm import SVC
+            model = SVC(probability=True)  # IMPORTANT
+
+        elif model_name == "Naive Bayes":
+            from sklearn.naive_bayes import GaussianNB
+            model = GaussianNB()
+
+        try:
+            model.fit(X_train, y_train)
+
+            # Get probabilities
+            y_prob = model.predict_proba(X_test)[:, 1]
+
+            # Compute ROC
+            fpr, tpr, _ = roc_curve(y_test, y_prob)
+            roc_auc = auc(fpr, tpr)
+
+            ax.plot(fpr, tpr, label=f"{model_name} (AUC = {roc_auc:.2f})")
+
+        except Exception as e:
+            st.warning(f"{model_name} does not support ROC")
+
+    # Random baseline
+    ax.plot([0, 1], [0, 1], 'r--')
+
+    ax.set_xlabel("False Positive Rate")
+    ax.set_ylabel("True Positive Rate")
+    ax.set_title("ROC Curve")
+    ax.legend()
+
+    st.pyplot(fig)
